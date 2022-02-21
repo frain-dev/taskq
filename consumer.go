@@ -352,6 +352,7 @@ func (c *Consumer) reserveOne(ctx context.Context) (*Message, error) {
 	}
 
 	msgs, err := c.q.ReserveN(ctx, 1, c.opt.WaitTimeout)
+
 	if err != nil && err != internal.ErrNotSupported {
 		return nil, err
 	}
