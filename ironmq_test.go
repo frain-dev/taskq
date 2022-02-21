@@ -5,8 +5,8 @@ import (
 
 	iron_config "github.com/iron-io/iron_go3/config"
 
-	"github.com/vmihailenco/taskq/v3"
-	"github.com/vmihailenco/taskq/v3/ironmq"
+	"github.com/frain-dev/taskq/v3"
+	"github.com/frain-dev/taskq/v3/ironmq"
 )
 
 func ironmqFactory() taskq.Factory {

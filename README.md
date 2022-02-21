@@ -7,7 +7,7 @@
 # Golang asynchronous task/job queue with Redis, SQS, IronMQ, and in-memory backends
 
 ![build workflow](https://github.com/vmihailenco/taskq/actions/workflows/build.yml/badge.svg)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/vmihailenco/taskq/v3)](https://pkg.go.dev/github.com/vmihailenco/taskq/v3?tab=doc)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/frain-dev/taskq/v3)](https://pkg.go.dev/github.com/frain-dev/taskq/v3?tab=doc)
 
 ## Installation
 
@@ -22,7 +22,7 @@ go mod init github.com/my/repo
 And then install taskq/v3 (note _v3_ in the import; omitting it is a popular mistake):
 
 ```shell
-go get github.com/vmihailenco/taskq/v3
+go get github.com/frain-dev/taskq/v3
 ```
 
 ## Features
