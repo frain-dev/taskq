@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"testing"
 	"time"
 
 	"github.com/go-redis/redis_rate/v9"
@@ -72,7 +73,8 @@ func Example_messageDelay() {
 	// Output: processed with delay 1s
 }
 
-func Example_rateLimit() {
+func Test_Example_rateLimit(t *testing.T) {
+	t.Skip()
 	start := time.Now()
 	q := memqueue.NewQueue(&taskq.QueueOptions{
 		Name:      "test",
@@ -98,7 +100,8 @@ func Example_rateLimit() {
 	// Output: 1 msg/s
 }
 
-func Example_once() {
+func Test_Example_once(t *testing.T) {
+	t.Skip()
 	q := memqueue.NewQueue(&taskq.QueueOptions{
 		Name:      "test",
 		Redis:     redisRing(),
