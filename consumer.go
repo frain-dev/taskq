@@ -59,7 +59,6 @@ type Consumer struct {
 	state       int32 // atomic
 	stopCh      chan struct{}
 
-	cfgs       *configRoulette
 	numWorker  int32 // atomic
 	numFetcher int32 // atomic
 
@@ -76,6 +75,11 @@ type Consumer struct {
 	timings   sync.Map
 
 	hooks []ConsumerHook
+}
+
+type consumerConfig struct {
+	NumFetcher int32
+	NumWorker  int32
 }
 
 // NewConsumer creates new Consumer for the queue using provided processing options.
@@ -151,17 +155,11 @@ func (c *Consumer) Start(ctx context.Context) error {
 	if err := c.start(); err != nil {
 		return err
 	}
-
 	if c.opt.MinNumWorker < c.opt.MaxNumWorker {
-		c.cfgs = newConfigRoulette(c.opt)
-		cfg := c.cfgs.Select(nil, false)
-		c.replaceConfig(ctx, cfg)
-
-		c.fetchersWG.Add(1)
-		go func() {
-			defer c.fetchersWG.Done()
-			c.autotune(ctx, cfg)
-		}()
+		c.replaceConfig(ctx, &consumerConfig{
+			NumFetcher: c.opt.MaxNumFetcher,
+			NumWorker:  c.opt.MaxNumWorker,
+		})
 	} else {
 		c.replaceConfig(ctx, &consumerConfig{
 			NumFetcher: 0, // fetcher is automatically started when needed
@@ -280,10 +278,6 @@ func (c *Consumer) addWorker(ctx context.Context, id int32) bool {
 	return false
 }
 
-func (c *Consumer) removeWorker(id int32) bool { //nolint:unused
-	return atomic.CompareAndSwapInt32(&c.numWorker, id+1, id)
-}
-
 func (c *Consumer) addFetcher(ctx context.Context, id int32) bool {
 	c.startStopMu.Lock()
 	defer c.startStopMu.Unlock()
@@ -358,6 +352,7 @@ func (c *Consumer) reserveOne(ctx context.Context) (*Message, error) {
 	}
 
 	msgs, err := c.q.ReserveN(ctx, 1, c.opt.WaitTimeout)
+
 	if err != nil && err != internal.ErrNotSupported {
 		return nil, err
 	}
@@ -785,62 +780,6 @@ func (c *Consumer) changeQueueEmptyVote(d int32) {
 	}
 }
 
-func (c *Consumer) queueEmpty() bool {
-	return atomic.LoadInt32(&c.queueEmptyVote) >= 3
-}
-
-func (c *Consumer) autotune(ctx context.Context, cfg *consumerConfig) {
-	timer := time.NewTimer(time.Hour)
-	defer timer.Stop()
-
-	for c.timing() == 0 {
-		timer.Reset(250 * time.Millisecond)
-		select {
-		case <-timer.C:
-			// continue
-		case <-c.stopCh:
-			return
-		}
-	}
-
-	for {
-		timer.Reset(c.autotuneInterval())
-		select {
-		case <-timer.C:
-			cfg = c.autotuneTick(ctx, cfg)
-		case <-c.stopCh:
-			return
-		}
-	}
-}
-
-func (c *Consumer) autotuneInterval() time.Duration {
-	const min = 500 * time.Millisecond
-	const max = time.Minute
-
-	d := 10 * c.timing()
-	if d < min {
-		return min
-	}
-	if d > max {
-		return max
-	}
-	return d
-}
-
-func (c *Consumer) autotuneTick(ctx context.Context, cfg *consumerConfig) *consumerConfig {
-	processed := int(atomic.LoadUint32(&c.processed))
-	retries := int(atomic.LoadUint32(&c.retries))
-	cfg.Update(processed, retries, c.timing())
-
-	if newCfg := c.cfgs.Select(cfg, c.queueEmpty()); newCfg != nil {
-		cfg = newCfg
-		c.replaceConfig(ctx, cfg)
-	}
-
-	return cfg
-}
-
 func (c *Consumer) replaceConfig(ctx context.Context, cfg *consumerConfig) {
 	if numFetcher := atomic.LoadInt32(&c.numFetcher); numFetcher != -1 {
 		if numFetcher > cfg.NumFetcher {
@@ -866,10 +805,6 @@ func (c *Consumer) replaceConfig(ctx context.Context, cfg *consumerConfig) {
 			}
 		}
 	}
-
-	cfg.Reset(
-		int(atomic.LoadUint32(&c.processed)),
-		int(atomic.LoadUint32(&c.retries)))
 }
 
 //------------------------------------------------------------------------------
