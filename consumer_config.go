@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-const numSelectedThreshold = 20
-
 type perfProfile struct {
 	start     time.Time
 	processed int
