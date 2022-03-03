@@ -16,11 +16,6 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@1.4.1
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-
       - name: Start Redis v${{ matrix.redis-version }}
         uses: supercharge/redis-github-action@1.4.0
         with:
