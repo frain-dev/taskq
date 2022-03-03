@@ -68,7 +68,6 @@ func TestRedisqLen(t *testing.T) {
 }
 
 func TestRedisqRateLimit(t *testing.T) {
-	t.Skip()
 	testRateLimit(t, redisqFactory(), &taskq.QueueOptions{
 		Name: queueName("redisq-rate-limit"),
 	})
