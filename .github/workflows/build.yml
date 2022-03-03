@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.16.x, 1.17.x]
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         redis-version: ["6.2.6"]
 
     runs-on: ubuntu-latest
@@ -43,9 +43,6 @@ jobs:
 
       - name: Get and verify dependencies
         run: go mod download && go mod verify
-
-      - name: Go vet
-        run: go vet ./...
 
       - name: Run integration tests
         run: go test ./...
