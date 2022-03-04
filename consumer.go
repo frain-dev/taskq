@@ -155,8 +155,8 @@ func (c *Consumer) Start(ctx context.Context) error {
 	if c.opt.MinNumWorker < c.opt.MaxNumWorker {
 		c.cfgs = newConfigRoulette(c.opt)
 		cfg := c.cfgs.Select(&consumerConfig{
-			NumFetcher: 1,
-			NumWorker:  c.opt.MinNumWorker}, false)
+			NumFetcher: c.opt.MaxNumFetcher,
+			NumWorker:  c.opt.MaxNumWorker})
 		c.replaceConfig(ctx, cfg)
 
 		c.fetchersWG.Add(1)
@@ -832,7 +832,7 @@ func (c *Consumer) autotuneTick(ctx context.Context, cfg *consumerConfig) *consu
 	retries := int(atomic.LoadUint32(&c.retries))
 	cfg.Update(processed, retries, c.timing())
 
-	if newCfg := c.cfgs.Select(cfg, c.queueEmpty()); newCfg != nil {
+	if newCfg := c.cfgs.Select(cfg); newCfg != nil {
 		cfg = newCfg
 		c.replaceConfig(ctx, cfg)
 	}

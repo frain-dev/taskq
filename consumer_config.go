@@ -116,39 +116,12 @@ func newConfigRoulette(opt *QueueOptions) *configRoulette {
 	return r
 }
 
-func (r *configRoulette) Select(currCfg *consumerConfig, queueEmpty bool) *consumerConfig {
+func (r *configRoulette) Select(currCfg *consumerConfig) *consumerConfig {
 	r.currCfg = currCfg
-	r.incrementConfig(queueEmpty)
 	return r.currCfg
 }
 
 func (r *configRoulette) resetConfig() {
 	r.maxTPS = 0
 	r.maxTiming = 0
-}
-func (r *configRoulette) incrementConfig(queueEmpty bool) {
-	r.withMoreWorkers(5, queueEmpty)
-	r.withMoreFetchers()
-}
-
-func (r *configRoulette) withMoreWorkers(n int32, queueEmpty bool) *consumerConfig {
-	if !hasFreeSystemResources() {
-		return r.currCfg
-	}
-	if queueEmpty {
-		return r.currCfg
-	}
-	r.currCfg.NumWorker += n
-	return r.currCfg
-}
-
-func (r *configRoulette) withMoreFetchers() *consumerConfig {
-	if !hasFreeSystemResources() {
-		return r.currCfg
-	}
-	if r.currCfg.NumFetcher >= r.opt.MaxNumFetcher {
-		return r.currCfg
-	}
-	r.currCfg.NumFetcher++
-	return r.currCfg
 }
